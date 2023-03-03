@@ -1,25 +1,14 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.11)
 
 option(JSON_VALIDATOR_INSTALL "Install target" ON)
-option(JSON_VALIDATOR_HUNTER "Enable Hunter package manager support" OFF)
-
-if(JSON_VALIDATOR_HUNTER)
-    include("cmake/HunterGate.cmake")
-    HunterGate(
-        URL "https://github.com/cpp-pm/hunter/archive/v0.23.262.tar.gz"
-        SHA1 "eb51e633e08cdbe2153caf255e9c23968fecb29d"
-    )
-endif()
 
 # the project
-project(nlohmann_json_schema_validator
-        LANGUAGES CXX)
+project(nlohmann_json_schema_validator LANGUAGES CXX)
 
 set(PROJECT_VERSION 2.2.0)
 
-if(JSON_VALIDATOR_HUNTER)
-    hunter_add_package(nlohmann_json)
-endif()
+# Make it so our own packages are found and also the ones in the sub-module library.
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # the library
 add_library(nlohmann_json_schema_validator
@@ -40,9 +29,9 @@ target_compile_features(nlohmann_json_schema_validator
         cxx_range_for) # for C++11 - flags
 
 set_target_properties(nlohmann_json_schema_validator
-                      PROPERTIES
-                          VERSION ${PROJECT_VERSION}
-                          SOVERSION 2)
+    PROPERTIES
+        VERSION ${PROJECT_VERSION}
+        SOVERSION 2)
 
 # disable tests and examples if project is not super project
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
@@ -113,7 +102,8 @@ if (JSON_VALIDATOR_BUILD_EXAMPLES)
     target_link_libraries(format-json-schema nlohmann_json_schema_validator)
 
     install(TARGETS json-schema-validate readme-json-schema
-            DESTINATION bin)
+        DESTINATION bin
+    )
 endif()
 
 if (JSON_VALIDATOR_BUILD_TESTS)
@@ -125,21 +115,22 @@ endif()
 # Set Up the Project Targets and Config Files for CMake
 
 if(JSON_VALIDATOR_INSTALL)
-    # Set the install path to the cmake config files (Relative, so install works correctly under Hunter as well)
+    # Set the install path to the cmake config files.
     set(INSTALL_CMAKE_DIR "lib/cmake/${PROJECT_NAME}")
     set(INSTALL_CMAKEDIR_ROOT share/cmake)
 
     # Install Targets
     install(EXPORT ${PROJECT_NAME}Targets
-            FILE ${PROJECT_NAME}Targets.cmake
-            DESTINATION "${INSTALL_CMAKE_DIR}")
+       FILE ${PROJECT_NAME}Targets.cmake
+       DESTINATION "${INSTALL_CMAKE_DIR}"
+    )
 
     include(CMakePackageConfigHelpers)
     write_basic_package_version_file(
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
         VERSION ${PROJECT_VERSION}
         COMPATIBILITY SameMajorVersion
-        )
+    )
 
     configure_package_config_file(
         ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in
@@ -153,5 +144,5 @@ if(JSON_VALIDATOR_INSTALL)
             ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
         DESTINATION
             ${INSTALL_CMAKE_DIR}
-        )
+    )
 endif()
